@@ -50,6 +50,8 @@ for date in dates:
     event = Event()
     event.add('summary', date[3])
     event.add('dtstart', start_timestamp)
+    # just default duration of x hours for the each event
+    event.add('dtend',   start_timestamp+datetime.timedelta(hours=2))
 
     cal.add_component(event)
 
