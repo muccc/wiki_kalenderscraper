@@ -8,6 +8,7 @@ import urllib2
 from bs4 import BeautifulSoup
 from icalendar import Calendar, Event
 import json
+import re
 
 DayL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
@@ -18,11 +19,14 @@ soup = BeautifulSoup(urllib2.urlopen('http://wiki.muc.ccc.de/kalender').read())
 rows = soup.find("table").find_all('tr')
 
 dates = []
+
+pttrn = re.compile(ur'[\d]{1,2}.[\d]{1,2}.')
+
 for row in rows:
     try:
         data = row.find_all("td")
 
-        d_date  = data[0].get_text().strip(' ')
+        d_date  = re.findall(pttrn, data[0].get_text())[0]
         d_day   = d_date.split('.')[0]
         d_month = d_date.split('.')[1]
         d_time  = data[1].get_text().strip(' ')
