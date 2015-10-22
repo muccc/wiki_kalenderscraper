@@ -56,6 +56,28 @@ for date in dates:
     event.add('dtstart', start_timestamp)
     # just default duration of x hours for the each event
     event.add('dtend',   start_timestamp+datetime.timedelta(hours=2))
+    # Adding a UID, required by ical spec section 4.8.4.7 (Unique Identifier)
+    # (...)
+    # The property MUST be specified in the "VEVENT", "VTODO", "VJOURNAL" or
+    # "VFREEBUSY" calendar components.
+    # (...)
+    # The UID itself MUST be a globally unique identifier. The generator of the
+    # identifier MUST guarantee that the identifier is unique. There are
+    # several algorithms that can be used to accomplish this. The identifier is
+    # RECOMMENDED to be the identical syntax to the [RFC 822] addr-spec.
+    #
+    # Calendaring and scheduling applications MUST generate this property in
+    # "VEVENT", "VTODO" and "VJOURNAL" calendar components to assure
+    # interoperability with other group scheduling applications. This
+    # identifier is created by the calendar system that generates an iCalendar
+    # object.
+    #
+    # Implementations MUST be able to receive and persist values of at least
+    # 255 characters for this property.
+    uid = 'wikical' + d_date + d_name + d_time + '@api.muc.ccc.de' 
+    uid = uid.replace(':', '.')
+
+    event.add('uid', uid)
 
     cal.add_component(event)
 
