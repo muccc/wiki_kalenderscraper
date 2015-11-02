@@ -35,8 +35,8 @@ for row in rows:
         d_anzahl= data[4].get_text().strip(' ')
         d_keyholder = data[5].get_text().strip(' ')
 
-        dates.append( (d_day, d_month, d_time, d_name, \
-            d_public, d_anzahl, d_keyholder) )
+        dates.append((d_day, d_month, d_time, d_name,
+                    d_public, d_anzahl, d_keyholder))
 
     except:
         pass
@@ -48,14 +48,23 @@ cal.add('prodid', '-//wiki.muc.ccc.de Kalenderexport//')
 cal.add('version', '2.0')
 
 for date in dates:
-    start_timestamp = datetime.datetime.strptime(date[0] + "." + date[1] + "." + \
-                str(now.year) + " " + date[2], "%d.%m.%Y %H:%M")    
 
     event = Event()
     event.add('summary', date[3])
-    event.add('dtstart', start_timestamp)
-    # just default duration of x hours for the each event
-    event.add('dtend',   start_timestamp+datetime.timedelta(hours=2))
+
+    if date[2]:
+        dtstart = datetime.datetime.strptime(date[0] + "." + date[1] + "." +
+                    str(now.year) + " " + date[2], "%d.%m.%Y %H:%M")
+        event.add('dtstart', dtstart)
+        # just default duration of x hours for the each event
+        event.add('dtend',   dtstart+datetime.timedelta(hours=2))
+    else:
+        # If no time given, assume an all-day event
+        # Lightning compatible format: VALUE=DATE
+        dtstart = datetime.date(now.year, int(date[1]), int(date[0]))
+        event.add('dtstart', dtstart)
+        event.add('dtend', dtstart + datetime.timedelta(days=1))
+
     # Adding a UID, required by ical spec section 4.8.4.7 (Unique Identifier)
     # (...)
     # The property MUST be specified in the "VEVENT", "VTODO", "VJOURNAL" or
