@@ -83,7 +83,9 @@ for date in dates:
     #
     # Implementations MUST be able to receive and persist values of at least
     # 255 characters for this property.
-    uid = 'wikical' + d_date + d_name + d_time + '@api.muc.ccc.de' 
+    uid = 'wikical' + date[0] + '.' + date[1] + '.' \
+            + date[3].replace(" ","") + '.' \
+            + date[2] + '@api.muc.ccc.de' 
     uid = uid.replace(':', '.')
 
     event.add('uid', uid)
