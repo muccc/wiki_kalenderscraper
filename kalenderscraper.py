@@ -15,7 +15,7 @@ DayL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 now = datetime.datetime.now()
 
 # Scrape calender data from wiki
-soup = BeautifulSoup(urllib2.urlopen('http://wiki.muc.ccc.de/kalender').read())
+soup = BeautifulSoup(urllib2.urlopen('http://wiki.muc.ccc.de/kalender').read(), "html.parser")
 rows = soup.find("table").find_all('tr')
 
 dates = []
