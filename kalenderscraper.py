@@ -110,17 +110,30 @@ fhandle.close()
 
 
 # Export next event to JSON file
-for date in dates:
-    testdate = datetime.datetime.strptime(date[0] + "." + date[1] + "." + \
-                str(now.year) + " " + date[2], "%d.%m.%Y %H:%M")    
+for date in accumulate(dates):
+    if date[7] > 1:
+        testdate = datetime.datetime.strptime(date[0] + "." + date[1] + "." + \
+                    str(now.year) + " 00:00" , "%d.%m.%Y %H:%M")
+    else:
+        testdate = datetime.datetime.strptime(date[0] + "." + date[1] + "." + \
+                    str(now.year) + " " + date[2], "%d.%m.%Y %H:%M")
 
-    if testdate > now:   
+    if testdate > now:
         eventname = date[3].replace(u'ü', 'ue').replace(u'ä','ae').replace(u'ö','oe')
-        jsonstring = json.dumps({'date': date[0] + "." + date[1] + ".", \
-                                 'time': date[2], \
-                                 'weekday': DayL[testdate.weekday()], \
-                                 'name': eventname, \
-                                 'public': date[4]})
+        if date[7] > 1:
+            event_end = int(date[0]) + int(date[7])
+            jsonstring = json.dumps({'date': date[0] + "." + date[1] + ".-" + str(event_end) + "." + date[1] + "." , \
+                                     'time': '10:00', \
+                                     'weekday': DayL[testdate.weekday()], \
+                                     'name': eventname, \
+                                     'public': date[4]})
+
+        else:
+            jsonstring = json.dumps({'date': date[0] + "." + date[1] + ".", \
+                                     'time': date[2], \
+                                     'weekday': DayL[testdate.weekday()], \
+                                     'name': eventname, \
+                                     'public': date[4]})
 
         path = os.path.dirname(os.path.realpath(__file__))
         fhandle = open(path + '/nextevent.json', "w+")
