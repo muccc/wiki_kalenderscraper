@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from icalendar import Calendar, Event
 import json
 import re
+from itertools import groupby
 
 DayL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
@@ -41,13 +42,22 @@ for row in rows:
     except:
         pass
 
+def accumulate(l):
+    for key, group in groupby(l, key=lambda x: '%s:%s' % (x[3], x[2])):
+        event_occurence = 0
+        date_occurence = None
+        for i, data in enumerate(group):
+            if i == 0:
+                date_occurence = data[0]
+            event_occurence+=1
+        yield (date_occurence, data[1], data[2], key.split(':')[0], data[4], data[5], data[6], event_occurence)
 
 # Export ics file with all dates
 cal = Calendar()
 cal.add('prodid', '-//wiki.muc.ccc.de Kalenderexport//')
 cal.add('version', '2.0')
 
-for date in dates:
+for date in accumulate(dates):
 
     event = Event()
     event.add('summary', date[3])
@@ -63,7 +73,7 @@ for date in dates:
         # Lightning compatible format: VALUE=DATE
         dtstart = datetime.date(now.year, int(date[1]), int(date[0]))
         event.add('dtstart', dtstart)
-        event.add('dtend', dtstart + datetime.timedelta(days=1))
+        event.add('dtend', dtstart + datetime.timedelta(days=(int(date[7]))))
 
     # Adding a UID, required by ical spec section 4.8.4.7 (Unique Identifier)
     # (...)
