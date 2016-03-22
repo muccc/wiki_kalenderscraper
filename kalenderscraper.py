@@ -119,9 +119,9 @@ for date in accumulate(dates):
                     str(now.year) + " " + date[2], "%d.%m.%Y %H:%M")
 
     if testdate > now:
-        eventname = date[3].replace(u'ü', 'ue').replace(u'ä','ae').replace(u'ö','oe')
+        eventname = date[3].replace(u'ü', 'ue').replace(u'ä', 'ae').replace(u'ö', 'oe')
         if date[7] > 1:
-            event_end = int(date[0]) + int(date[7])
+            event_end = int(date[0]) + int((int(date[7]) - 1))
             jsonstring = json.dumps({'date': date[0] + "." + date[1] + ".-" + str(event_end) + "." + date[1] + "." , \
                                      'time': '10:00', \
                                      'weekday': DayL[testdate.weekday()], \
