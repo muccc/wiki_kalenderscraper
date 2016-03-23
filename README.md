@@ -13,3 +13,5 @@ nextevent.json
 python dependencies:
 * beautifulsoup4
 * icalendar
+* requests
+* html5lib
