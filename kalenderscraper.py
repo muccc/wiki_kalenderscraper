@@ -23,6 +23,12 @@ dates = []
 
 pttrn = re.compile(ur'[\d]{1,2}.[\d]{1,2}.')
 
+def match_class(target):
+    def do_match(tag):
+        classes = tag.get('class', [])
+        return all(c in classes for c in target)
+    return do_match
+
 for row in rows:
     try:
         data = row.find_all("td")
@@ -32,12 +38,19 @@ for row in rows:
         d_month = d_date.split('.')[1]
         d_time  = data[1].get_text().strip(' ')
         d_name  = data[2].get_text().strip(' ')
+        d_link_raw = data[2].find(match_class(["urlextern"]))
+        if d_link_raw:
+            d_link = d_link_raw.get('href')
+        d_link_raw = data[2].find(match_class(["wikilink1"]))
+        if d_link_raw:
+            d_link = 'https://wiki.muc.ccc.de' + d_link_raw.get('href')
         d_public= data[3].get_text().strip(' ')
         d_anzahl= data[4].get_text().strip(' ')
         d_keyholder = data[5].get_text().strip(' ')
 
         dates.append((d_day, d_month, d_time, d_name,
-                    d_public, d_anzahl, d_keyholder))
+                    d_public, d_anzahl, d_keyholder, d_link))
+        d_link = u''
 
     except:
         pass
@@ -50,7 +63,7 @@ def accumulate(l):
             if i == 0:
                 date_occurence = data[0]
             event_occurence+=1
-        yield (date_occurence, data[1], data[2], key.split(':')[0], data[4], data[5], data[6], event_occurence)
+        yield (date_occurence, data[1], data[2], key.split(':')[0], data[4], data[5], data[6], data[7], event_occurence)
 
 # Export ics file with all dates
 cal = Calendar()
@@ -73,7 +86,19 @@ for date in accumulate(dates):
         # Lightning compatible format: VALUE=DATE
         dtstart = datetime.date(now.year, int(date[1]), int(date[0]))
         event.add('dtstart', dtstart)
-        event.add('dtend', dtstart + datetime.timedelta(days=(int(date[7]))))
+        event.add('dtend', dtstart + datetime.timedelta(days=(int(date[8]))))
+
+    if date[4]:
+        if int(date[4]) == 1:
+            event.add('description', 'Public')
+        else:
+            event.add('description', 'Members')
+
+    if date[5]:
+        event.add('location', date[5])
+
+    if date[7]:
+        event.add('url', date[7])
 
     # Adding a UID, required by ical spec section 4.8.4.7 (Unique Identifier)
     # (...)
@@ -111,7 +136,7 @@ fhandle.close()
 
 # Export next event to JSON file
 for date in accumulate(dates):
-    if date[7] > 1:
+    if date[8] > 1:
         testdate = datetime.datetime.strptime(date[0] + "." + date[1] + "." + \
                     str(now.year) + " 00:00" , "%d.%m.%Y %H:%M")
     else:
@@ -120,8 +145,8 @@ for date in accumulate(dates):
 
     if testdate > now:
         eventname = date[3].replace(u'ü', 'ue').replace(u'ä', 'ae').replace(u'ö', 'oe')
-        if date[7] > 1:
-            event_end = int(date[0]) + int((int(date[7]) - 1))
+        if date[8] > 1:
+            event_end = int(date[0]) + int((int(date[8]) - 1))
             jsonstring = json.dumps({'date': date[0] + "." + date[1] + ".-" + str(event_end) + "." + date[1] + "." , \
                                      'time': '10:00', \
                                      'weekday': DayL[testdate.weekday()], \
