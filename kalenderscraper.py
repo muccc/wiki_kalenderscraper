@@ -74,6 +74,11 @@ cal = Calendar()
 cal.add('prodid', '-//wiki.muc.ccc.de Kalenderexport//')
 cal.add('version', '2.0')
 
+# Separate calendar for public events
+cal_public = Calendar()
+cal_public.add('prodid', '-//wiki.muc.ccc.de Kalenderexport Public//')
+cal_public.add('version', '2.0')
+
 for date in accumulate(dates):
 
     event = Event()
@@ -124,19 +129,25 @@ for date in accumulate(dates):
     # 255 characters for this property.
     uid = 'wikical' + date[0] + '.' + date[1] + '.' \
             + date[3].replace(" ","") + '.' \
-            + date[2] + '@api.muc.ccc.de' 
+            + date[2] + '@api.muc.ccc.de'
     uid = uid.replace(':', '.')
 
     event.add('uid', uid)
 
     cal.add_component(event)
 
+    if date[4] and int(date[4]) == 1:
+        cal_public.add_component(event)
 
 path = os.path.dirname(os.path.realpath(__file__))
+
 fhandle = open(path + '/wiki_kalender.ics', "w+")
 fhandle.write(cal.to_ical())
 fhandle.close()
 
+fhandle = open(path + '/wiki_kalender_public.ics', "w+")
+fhandle.write(cal_public.to_ical())
+fhandle.close()
 
 # Export next event to JSON file
 for date in accumulate(dates):
