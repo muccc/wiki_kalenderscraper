@@ -10,8 +10,10 @@ Exportiert das naechste Event zu
 nextevent.json
 (fuer anzeiger)
 
-python dependencies:
-* beautifulsoup4
-* icalendar
-* requests
-* html5lib
+python dependencies installieren:
+
+    nix-shell .
+  
+oder
+
+    pip install -r requirements.txt
