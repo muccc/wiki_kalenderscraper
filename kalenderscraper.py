@@ -110,7 +110,7 @@ for date in accumulate(dates):
         dtstart = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
         event.add('dtstart', dtstart)
         # just default duration of x hours for the each event
-        event.add('dtend',   dtstart+datetime.timedelta(hours=d_duration_h))
+        event.add('dtend',   dtstart+datetime.timedelta(hours=date[9]))
     else:
         # It's an whole-day or multi-day event
         # Lightning compatible format: VALUE=DATE
