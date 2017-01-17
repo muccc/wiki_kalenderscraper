@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Kalenderscraper
 # c007, 10.06.14
@@ -75,6 +76,7 @@ for row in rows:
 
     d_name = data[2].get_text().strip(' ')
     d_link_raw = data[2].find(match_class(["urlextern"]))
+    d_link = u''
     if d_link_raw:
         d_link = d_link_raw.get('href')
     d_link_raw = data[2].find(match_class(["wikilink1"]))
@@ -86,7 +88,6 @@ for row in rows:
 
     dates.append((d_day, d_month, d_time, d_name,
                  d_public, d_anzahl, d_keyholder, d_link, d_duration_h))
-    d_link = u''
 
 
 # Export ics file with all dates
