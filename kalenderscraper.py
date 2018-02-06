@@ -15,17 +15,6 @@ from itertools import groupby
 requests.packages.urllib3.disable_warnings()
 
 
-def accumulate(l):
-    for key, group in groupby(l, key=lambda x: '%s:%s' % (x[3], x[2])):
-        event_occurence = 0
-        date_occurence = None
-        for i, data in enumerate(group):
-            if i == 0:
-                date_occurence = data[0]
-            event_occurence += 1
-        yield (date_occurence, data[1], data[2], key.split(':')[0], data[4],
-               data[5], data[6], data[7], event_occurence, data[8])
-
 
 def match_class(target):
     def do_match(tag):
@@ -61,12 +50,10 @@ for row in rows:
     else:
         continue
 
-    d_day = d_date.split('.')[0]
-    d_month = d_date.split('.')[1]
-
     # If there is no valid time given, we assume a whole-day event
     cell_time = data[1].get_text().strip(' ')
     d_time = re.findall(pttrn_date, cell_time)
+
     if len(d_time) == 1:
         d_time = d_time[0]
         d_duration_h = 2
@@ -74,7 +61,7 @@ for row in rows:
         d_time = "00:00"
         d_duration_h = 24
 
-    d_name = data[2].get_text().strip(' ')
+
     d_link_raw = data[2].find(match_class(["urlextern"]))
     d_link = u''
     if d_link_raw:
@@ -82,12 +69,42 @@ for row in rows:
     d_link_raw = data[2].find(match_class(["wikilink1"]))
     if d_link_raw:
         d_link = 'https://wiki.muc.ccc.de' + d_link_raw.get('href')
-    d_public = data[3].get_text().strip(' ')
-    d_anzahl = data[4].get_text().strip(' ')
-    d_keyholder = data[5].get_text().strip(' ')
 
-    dates.append((d_day, d_month, d_time, d_name,
-                 d_public, d_anzahl, d_keyholder, d_link, d_duration_h))
+    entry = {
+        'day': int(d_date.split('.')[0]),
+        'month': int(d_date.split('.')[1]),
+        'year': now.year,
+        'time': d_time,
+        'duration': d_duration_h,
+        'name': data[2].get_text().strip(' '),
+        'public': int(data[3].get_text().strip(' ')),
+        'room': data[4].get_text().strip(' '),
+        'keyholder': data[5].get_text().strip(' '),
+        'url': d_link
+    }
+
+    dates.append(entry)
+    #dates.append((d_day, d_month, d_time, d_name, d_public, d_anzahl, d_keyholder, d_link, d_duration_h))
+
+
+# merge entries with same date and time together aka merge multi-day events
+def accumulate(l):
+    for key, group in groupby(l, key=lambda x: '%s:%s' % (x['name'], x['time'])):
+        event_occurence = 0
+        date_occurence = None
+        for i, data in enumerate(group):
+            if i == 0:
+                first_day = data['day']
+            event_occurence += 1
+
+        data['day'] = first_day
+        data['event_occurence'] = event_occurence
+
+        yield(data)
+
+        #yield (date_occurence, data[1], data[2], key.split(':')[0], data[4],
+        #       data[5], data[6], data[7], event_occurence, data[8])
+
 
 
 # Export ics file with all dates
@@ -100,36 +117,36 @@ cal_public = Calendar()
 cal_public.add('prodid', '-//wiki.muc.ccc.de Kalenderexport Public//')
 cal_public.add('version', '2.0')
 
-for date in accumulate(dates):
+for entry in accumulate(dates):
 
     event = Event()
-    event.add('summary', date[3])
+    event.add('summary', entry['name'])
 
-    if date[8] == 1 and date[9] < 24:
-        datestring = date[0] + "." + date[1] + "." + \
-                     str(now.year) + " " + date[2]
+    # first classic events, taking place on one single day
+    if entry['event_occurence'] == 1 and entry['duration'] < 24:
+        datestring = '{day}.{month}.{year} {time}'.format(**entry)
         dtstart = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
         event.add('dtstart', dtstart)
         # just default duration of x hours for the each event
-        event.add('dtend',   dtstart+datetime.timedelta(hours=date[9]))
+        event.add('dtend',   dtstart+datetime.timedelta(hours=entry['duration']))
     else:
         # It's an whole-day or multi-day event
         # Lightning compatible format: VALUE=DATE
-        dtstart = datetime.date(now.year, int(date[1]), int(date[0]))
+        dtstart = datetime.date(entry['year'], entry['month'], entry['day'])
         event.add('dtstart', dtstart)
-        event.add('dtend', dtstart + datetime.timedelta(days=(int(date[8]))))
+        event.add('dtend', dtstart + datetime.timedelta(days=int(entry['event_occurence'])))
 
-    if date[4]:
-        if int(date[4]) == 1:
+    if entry['public']:
+        if entry['public'] == 1:
             event.add('description', 'Public')
         else:
             event.add('description', 'Members')
 
-    if date[5]:
-        event.add('location', date[5])
+    if entry['room']:
+        event.add('location', entry['room'])
 
-    if date[7]:
-        event.add('url', date[7])
+    if entry['url']:
+        event.add('url', entry['url'])
 
     # Adding a UID, required by ical spec section 4.8.4.7 (Unique Identifier)
     # (...)
@@ -149,16 +166,15 @@ for date in accumulate(dates):
     #
     # Implementations MUST be able to receive and persist values of at least
     # 255 characters for this property.
-    uid = 'wikical' + date[0] + '.' + date[1] + '.' \
-          + date[3].replace(" ", "") + '.' \
-          + date[2] + '@api.muc.ccc.de'
+    entry['name_'] = entry['name'].replace(" ", "")
+    uid = u'wikical{day}.{month}.{name_}.{time}@api.muc.ccc.de'.format(**entry)
     uid = uid.replace(':', '.')
 
     event.add('uid', uid)
 
     cal.add_component(event)
 
-    if date[4] and int(date[4]) == 1:
+    if entry['public'] == 1:
         cal_public.add_component(event)
 
 path = os.path.dirname(os.path.realpath(__file__))
@@ -172,38 +188,33 @@ fhandle.write(cal_public.to_ical())
 fhandle.close()
 
 # Export next event to JSON file
-for date in accumulate(dates):
-    if date[8] > 1:
-        datestring = date[0] + "." + date[1] + "." + \
-            str(now.year) + " 00:00"
+for entry in accumulate(dates):
+    if entry['event_occurence'] > 1:
+        datestring = '{day}.{month}.{year} 00:00'.format(**entry)
         testdate = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
     else:
-        datestring = date[0] + "." + date[1] + "." + \
-            str(now.year) + " " + date[2]
+        datestring = '{day}.{month}.{year} {time}'.format(**entry)
         testdate = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
 
     if testdate > now:
-        eventname = date[3].replace(u'ü', 'ue')
+        eventname = entry['name'].replace(u'ü', 'ue')
         eventname = eventname.replace(u'ä', 'ae')
         eventname = eventname.replace(u'ö', 'oe')
 
-        if date[8] > 1:
-            event_end = int(date[0]) + int((int(date[8]) - 1))
-            datestring = date[0] + "." + date[1] + ".-" + \
-                str(event_end) + "." + date[1] + "."
-            jsonstring = json.dumps({'date': datestring,
+        if entry['event_occurence'] > 1:
+            entry['end_day'] = entry['day'] + entry['event_occurence'] - 1
+            jsonstring = json.dumps({'date': '{day}.-{end_day}.{month}.'.format(**entry),
                                      'time': '10:00',
                                      'weekday': DayL[testdate.weekday()],
                                      'name': eventname,
-                                     'public': date[4]})
+                                     'public': entry['public']})
 
         else:
-            datestring = date[0] + "." + date[1] + "."
-            jsonstring = json.dumps({'date': datestring,
-                                     'time': date[2],
+            jsonstring = json.dumps({'date': '{day}.{month}.'.format(**entry),
+                                     'time': entry['time'],
                                      'weekday': DayL[testdate.weekday()],
                                      'name': eventname,
-                                     'public': date[4]})
+                                     'public': entry['public']})
 
         path = os.path.dirname(os.path.realpath(__file__))
         fhandle = open(path + '/nextevent.json', "w+")
