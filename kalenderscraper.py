@@ -23,8 +23,8 @@ def match_class(target):
     return do_match
 
 
-DayL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
-        'Saturday', 'Sunday']
+DayL = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
+        'Samstag', 'Sonntag']
 
 now = datetime.datetime.now()
 
