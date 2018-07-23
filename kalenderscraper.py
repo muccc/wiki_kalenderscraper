@@ -25,6 +25,7 @@ def match_class(target):
 
 DayL = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
         'Samstag', 'Sonntag']
+DayS = ['Mo', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 now = datetime.datetime.now()
 
@@ -205,14 +206,16 @@ for entry in accumulate(dates):
             entry['end_day'] = entry['day'] + entry['event_occurence'] - 1
             jsonstring = json.dumps({'date': '{day}.-{end_day}.{month}.'.format(**entry),
                                      'time': '10:00',
-                                     'weekday': DayL[testdate.weekday()],
+                                     'weekday': DayS[testdate.weekday()],
+                                     'weekday_long': DayL[testdate.weekday()],
                                      'name': eventname,
                                      'public': entry['public']})
 
         else:
             jsonstring = json.dumps({'date': '{day}.{month}.'.format(**entry),
                                      'time': entry['time'],
-                                     'weekday': DayL[testdate.weekday()],
+                                     'weekday': DayS[testdate.weekday()],
+                                     'weekday_long': DayL[testdate.weekday()],
                                      'name': eventname,
                                      'public': entry['public']})
 
