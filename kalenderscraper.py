@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 # Kalenderscraper
 # c007, 10.06.14
+# andi, 2017+2018
 
 import os
 import datetime
@@ -14,24 +15,17 @@ from itertools import groupby
 
 requests.packages.urllib3.disable_warnings()
 
-
-
 def match_class(target):
     def do_match(tag):
         classes = tag.get('class', [])
         return all(c in classes for c in target)
     return do_match
 
-
-DayL = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
-        'Samstag', 'Sonntag']
-DayS = ['Mo', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
+path = os.path.dirname(os.path.realpath(__file__))
 now = datetime.datetime.now()
 
 # Scrape calender data from wiki
-soup = BeautifulSoup(requests.get('https://wiki.muc.ccc.de/kalender',
-                     verify=False).text, 'html5lib')
+soup = BeautifulSoup(requests.get('https://wiki.muc.ccc.de/kalender', verify=False).text, 'html5lib')
 table = soup.find('table', attrs={'class': 'inline'})
 table_body = table.find('tbody')
 rows = table_body.find_all('tr')
@@ -126,16 +120,16 @@ for entry in accumulate(dates):
     # first classic events, taking place on one single day
     if entry['event_occurence'] == 1 and entry['duration'] < 24:
         datestring = '{day}.{month}.{year} {time}'.format(**entry)
-        dtstart = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
-        event.add('dtstart', dtstart)
-        # just default duration of x hours for the each event
-        event.add('dtend',   dtstart+datetime.timedelta(hours=entry['duration']))
+        entry['dtstart'] = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
+        entry['dtend'] = entry['dtstart']+datetime.timedelta(hours=entry['duration'])
     else:
         # It's an whole-day or multi-day event
         # Lightning compatible format: VALUE=DATE
-        dtstart = datetime.date(entry['year'], entry['month'], entry['day'])
-        event.add('dtstart', dtstart)
-        event.add('dtend', dtstart + datetime.timedelta(days=int(entry['event_occurence'])))
+        entry['dtstart'] = datetime.date(entry['year'], entry['month'], entry['day'])
+        entry['dtstart'] = entry['dtstart'] + datetime.timedelta(days=int(entry['event_occurence']))
+
+    event.add('dtstart', entry['dtstart'])
+    event.add('dtend',   entry['dtend'])
 
     if entry['public']:
         if entry['public'] == 1:
@@ -178,49 +172,40 @@ for entry in accumulate(dates):
     if entry['public'] == 1:
         cal_public.add_component(event)
 
-path = os.path.dirname(os.path.realpath(__file__))
-
-fhandle = open(path + '/wiki_kalender.ics', "w+")
-fhandle.write(cal.to_ical())
-fhandle.close()
+with open(path + '/wiki_kalender.ics', "w+") as f:
+    f.write(cal.to_ical())
 
 fhandle = open(path + '/wiki_kalender_public.ics', "w+")
 fhandle.write(cal_public.to_ical())
 fhandle.close()
 
+
+
+DayL = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
+        'Samstag', 'Sonntag']
+DayS = ['Mo', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
 # Export next event to JSON file
 for entry in accumulate(dates):
-    if entry['event_occurence'] > 1:
-        datestring = '{day}.{month}.{year} 00:00'.format(**entry)
-        testdate = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
-    else:
-        datestring = '{day}.{month}.{year} {time}'.format(**entry)
-        testdate = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
-
-    if testdate > now:
+    if entry['dtend'] > now:
         eventname = entry['name'].replace(u'ü', 'ue')
         eventname = eventname.replace(u'ä', 'ae')
         eventname = eventname.replace(u'ö', 'oe')
-
+        weekday = entry['dtstart'].weekday()
         if entry['event_occurence'] > 1:
             entry['end_day'] = entry['day'] + entry['event_occurence'] - 1
-            jsonstring = json.dumps({'date': '{day}.-{end_day}.{month}.'.format(**entry),
-                                     'time': '10:00',
-                                     'weekday': DayS[testdate.weekday()],
-                                     'weekday_long': DayL[testdate.weekday()],
-                                     'name': eventname,
-                                     'public': entry['public']})
-
+            date = '{day}.-{end_day}.{month}.'.format(**entry)
+            entry['time'] = '10:00'
         else:
-            jsonstring = json.dumps({'date': '{day}.{month}.'.format(**entry),
-                                     'time': entry['time'],
-                                     'weekday': DayS[testdate.weekday()],
-                                     'weekday_long': DayL[testdate.weekday()],
-                                     'name': eventname,
-                                     'public': entry['public']})
+            date = '{day}.{month}.'.format(**entry)
 
-        path = os.path.dirname(os.path.realpath(__file__))
-        fhandle = open(path + '/nextevent.json', "w+")
-        print >> fhandle, jsonstring
-        fhandle.close()
+        with open(path + '/nextevent.json', "w+") as f:
+            json.dump({
+                'date': date,
+                'time': entry['time'],
+                'weekday': DayS[weekday],
+                'weekday_long': DayL[weekday],
+                'name': eventname,
+                'public': entry['public']
+            }, f)
         break
