@@ -126,7 +126,7 @@ for entry in accumulate(dates):
         # It's an whole-day or multi-day event
         # Lightning compatible format: VALUE=DATE
         entry['dtstart'] = datetime.date(entry['year'], entry['month'], entry['day'])
-        entry['dtstart'] = entry['dtstart'] + datetime.timedelta(days=int(entry['event_occurence']))
+        entry['dtend'] = entry['dtstart'] + datetime.timedelta(days=int(entry['event_occurence']))
 
     event.add('dtstart', entry['dtstart'])
     event.add('dtend',   entry['dtend'])
