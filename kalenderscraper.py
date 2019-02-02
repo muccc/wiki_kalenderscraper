@@ -125,7 +125,9 @@ for entry in accumulate(dates):
     else:
         # It's an whole-day or multi-day event
         # Lightning compatible format: VALUE=DATE
-        entry['dtstart'] = datetime.date(entry['year'], entry['month'], entry['day'])
+        #entry['dtstart'] = datetime.date(entry['year'], entry['month'], entry['day'])
+        datestring = '{day}.{month}.{year} {time}'.format(**entry)
+        entry['dtstart'] = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M") 
         entry['dtend'] = entry['dtstart'] + datetime.timedelta(days=int(entry['event_occurence']))
 
     event.add('dtstart', entry['dtstart'])
@@ -187,6 +189,10 @@ DayS = ['Mo', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 # Export next event to JSON file
 for entry in accumulate(dates):
+    #print("type dtend: %s" % entry['dtend'])
+    #print("type dtend: %s" % type(entry['dtend']))
+    #print("type now: %s" %now)
+    #print("type now: %s" % type(now))
     if entry['dtend'] > now:
         eventname = entry['name'].replace(u'ü', 'ue')
         eventname = eventname.replace(u'ä', 'ae')
@@ -195,7 +201,8 @@ for entry in accumulate(dates):
         if entry['event_occurence'] > 1:
             entry['end_day'] = entry['day'] + entry['event_occurence'] - 1
             date = '{day}.-{end_day}.{month}.'.format(**entry)
-            entry['time'] = '10:00'
+            if len(entry['time']) == 0:
+                entry['time'] = '10:00'
         else:
             date = '{day}.{month}.'.format(**entry)
 
