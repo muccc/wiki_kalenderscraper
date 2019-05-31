@@ -47,11 +47,19 @@ for row in rows:
 
     # If there is no valid time given, we assume a whole-day event
     cell_time = data[1].get_text().strip(' ')
-    d_time = re.findall(pttrn_date, cell_time)
+    d_time = re.findall(pttrn_time, cell_time)
 
     if len(d_time) == 1:
         d_time = d_time[0]
         d_duration_h = 2
+    elif len(d_time) == 2:
+        time1 = datetime.datetime.strptime(d_time[0], "%H:%M")
+        time2 = datetime.datetime.strptime(d_time[1], "%H:%M")
+        diff = time2 - time1
+        d_duration_h = int(diff.total_seconds() / 3600)
+        if (d_duration_h < 1):
+            d_duration_h = 1
+        d_time = d_time[0]
     else:
         d_time = "00:00"
         d_duration_h = 24
