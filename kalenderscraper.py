@@ -122,6 +122,8 @@ for entry in accumulate(dates):
         datestring = '{day}.{month}.{year} {time}'.format(**entry)
         entry['dtstart'] = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M")
         entry['dtend'] = entry['dtstart']+datetime.timedelta(hours=entry['duration'])
+        event.add('dtstart', entry['dtstart'])
+        event.add('dtend',   entry['dtend'])
     else:
         # It's an whole-day or multi-day event
         # Lightning compatible format: VALUE=DATE
@@ -129,9 +131,8 @@ for entry in accumulate(dates):
         datestring = '{day}.{month}.{year} {time}'.format(**entry)
         entry['dtstart'] = datetime.datetime.strptime(datestring, "%d.%m.%Y %H:%M") 
         entry['dtend'] = entry['dtstart'] + datetime.timedelta(days=int(entry['event_occurence']))
-
-    event.add('dtstart', entry['dtstart'])
-    event.add('dtend',   entry['dtend'])
+        event.add('dtstart', entry['dtstart'].date())
+        event.add('dtend',   entry['dtend'].date())
 
     if entry['public']:
         if entry['public'] == 1:
