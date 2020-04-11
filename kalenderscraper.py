@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Kalenderscraper
 # c007, 10.06.14
@@ -32,8 +32,8 @@ rows = table_body.find_all('tr')
 
 dates = []
 
-pttrn_date = re.compile(ur'[\d]{1,2}.[\d]{1,2}.')
-pttrn_time = re.compile(ur'[\d]{1,2}:[\d]{1,2}')
+pttrn_date = re.compile(r'[\d]{1,2}.[\d]{1,2}.')
+pttrn_time = re.compile(r'[\d]{1,2}:[\d]{1,2}')
 
 for row in rows:
     data = row.find_all("td")
@@ -66,7 +66,7 @@ for row in rows:
 
 
     d_link_raw = data[2].find(match_class(["urlextern"]))
-    d_link = u''
+    d_link = ''
     if d_link_raw:
         d_link = d_link_raw.get('href')
     d_link_raw = data[2].find(match_class(["wikilink1"]))
@@ -173,7 +173,7 @@ for entry in accumulate(dates):
     # Implementations MUST be able to receive and persist values of at least
     # 255 characters for this property.
     entry['name_'] = entry['name'].replace(" ", "")
-    uid = u'wikical{day}.{month}.{name_}.{time}@api.muc.ccc.de'.format(**entry)
+    uid = 'wikical{day}.{month}.{name_}.{time}@api.muc.ccc.de'.format(**entry)
     uid = uid.replace(':', '.')
 
     event.add('uid', uid)
@@ -183,10 +183,10 @@ for entry in accumulate(dates):
     if entry['public'] == 1:
         cal_public.add_component(event)
 
-with open(path + '/wiki_kalender.ics', "w+") as f:
+with open(path + '/wiki_kalender.ics', "wb+") as f:
     f.write(cal.to_ical())
 
-fhandle = open(path + '/wiki_kalender_public.ics', "w+")
+fhandle = open(path + '/wiki_kalender_public.ics', "wb+")
 fhandle.write(cal_public.to_ical())
 fhandle.close()
 
@@ -203,9 +203,9 @@ for entry in accumulate(dates):
     #print("type now: %s" %now)
     #print("type now: %s" % type(now))
     if entry['dtend'] > now:
-        eventname = entry['name'].replace(u'ü', 'ue')
-        eventname = eventname.replace(u'ä', 'ae')
-        eventname = eventname.replace(u'ö', 'oe')
+        eventname = entry['name'].replace('ü', 'ue')
+        eventname = eventname.replace('ä', 'ae')
+        eventname = eventname.replace('ö', 'oe')
         weekday = entry['dtstart'].weekday()
         if entry['event_occurence'] > 1:
             entry['end_day'] = entry['day'] + entry['event_occurence'] - 1
