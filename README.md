@@ -17,3 +17,7 @@ python dependencies installieren:
 oder
 
     pip install -r requirements.txt
+
+oder (Ubuntu):
+
+    apt-get install python3-bs4 python3-icalendar python3-html5lib 
