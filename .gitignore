@@ -1,2 +1,4 @@
 *.json
 *.ics
+__pycache__
+result*

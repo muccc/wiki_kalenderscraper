@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "wiki_kalenderscraper"
+version = "1.0.0"
+description = "Converts MuCCC Wiki Kalender into ical & json"
+authors = [
+  "chris007 <mail@chris007.de>",
+  "Andreas Hubel <andi@saerdnaer.de>",
+  "Stefan `Sec` Zehl <sec@42.org>",
+  "Franz Pletz <fpletz@fnordicwalking.de>",
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.27.1"
+beautifulsoup4 = "^4.10.0"
+icalendar = "^4.0.9"
+html5lib = "^1.1"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+
+[tool.poetry.scripts]
+kalenderscraper = "wiki_kalenderscraper:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

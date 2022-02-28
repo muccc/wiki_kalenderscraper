@@ -1,6 +1,0 @@
-beautifulsoup4==4.4.1
-html5lib==0.9999999
-icalendar==3.9.2
-python-dateutil==2.5.2
-pytz==2016.3
-requests>=2.20.0
