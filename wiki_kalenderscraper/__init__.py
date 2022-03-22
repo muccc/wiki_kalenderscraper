@@ -53,7 +53,7 @@ class KalenderScraper:
         # Scrape calender data from wiki
         now = datetime.datetime.now()
         soup = BeautifulSoup(
-            requests.get("https://wiki.muc.ccc.de/kalender").text, "html5lib"
+            requests.get("https://wiki.muc.ccc.de/kalender:start").text, "html5lib"
         )
         table = soup.find("table", attrs={"class": "inline"})
         table_body = table.find("tbody")
