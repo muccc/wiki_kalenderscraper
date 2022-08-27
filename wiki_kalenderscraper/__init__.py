@@ -6,7 +6,7 @@
 # max, 2022
 
 import os
-import datetime
+from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 from icalendar import Calendar, Event
@@ -60,7 +60,7 @@ class KalenderScraper:
 
     def _parse(self):
         # Scrape calender data from wiki
-        now = datetime.datetime.now()
+        now = datetime.now()
         soup = BeautifulSoup(
             requests.get("https://wiki.muc.ccc.de/kalender:start").text, "html5lib"
         )
@@ -91,8 +91,8 @@ class KalenderScraper:
                 d_time = d_time[0]
                 d_duration_h = 2
             elif len(d_time) == 2:
-                time1 = datetime.datetime.strptime(d_time[0], "%H:%M")
-                time2 = datetime.datetime.strptime(d_time[1], "%H:%M")
+                time1 = datetime.strptime(d_time[0], "%H:%M")
+                time2 = datetime.strptime(d_time[1], "%H:%M")
                 diff = time2 - time1
                 d_duration_h = int(diff.total_seconds() / 3600)
                 if d_duration_h < 1:
@@ -147,10 +147,10 @@ class KalenderScraper:
             # first classic events, taking place on one single day
             if entry["event_occurence"] == 1 and entry["duration"] < 24:
                 datestring = "{day}.{month}.{year} {time}".format(**entry)
-                entry["dtstart"] = datetime.datetime.strptime(
+                entry["dtstart"] = datetime.strptime(
                     datestring, "%d.%m.%Y %H:%M"
                 )
-                entry["dtend"] = entry["dtstart"] + datetime.timedelta(
+                entry["dtend"] = entry["dtstart"] + timedelta(
                     hours=entry["duration"]
                 )
                 
@@ -166,10 +166,10 @@ class KalenderScraper:
                 # Lightning compatible format: VALUE=DATE
                 # entry['dtstart'] = datetime.date(entry['year'], entry['month'], entry['day'])
                 datestring = "{day}.{month}.{year} {time}".format(**entry)
-                entry["dtstart"] = datetime.datetime.strptime(
+                entry["dtstart"] = datetime.strptime(
                     datestring, "%d.%m.%Y %H:%M"
                 )
-                entry["dtend"] = entry["dtstart"] + datetime.timedelta(
+                entry["dtend"] = entry["dtstart"] + timedelta(
                     days=int(entry["event_occurence"])
                 )
                 event.add("dtstart", entry["dtstart"].date())
@@ -219,7 +219,7 @@ class KalenderScraper:
         return (cal, cal_public)
 
     def next_event_json(self):
-        now = datetime.datetime.now()
+        now = datetime.now()
         # Add timezone information: Europe/Berlin
         now = now.replace(tzinfo=self.tz)
         DayL = [
