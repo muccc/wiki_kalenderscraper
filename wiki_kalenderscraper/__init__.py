@@ -17,7 +17,14 @@ from itertools import groupby
 
 
 class KalenderScraper:
-    def __init__(self):
+    def __init__(self, tz: str="Europe/Berlin"):
+        """
+        tz: timezone as a string (e.g. 'Europe/Berlin') via pytz
+
+
+        On init, KalenderScraper scrapes the calendar data from the wiki automatically.
+        """
+        self.tz = pytz.timezone(tz)
         self.scrape()
 
     @classmethod
@@ -148,8 +155,8 @@ class KalenderScraper:
                 )
                 
                 # Add timezone information to datetimes: Europe/Berlin
-                entry["dtstart"] = entry["dtstart"].replace(tzinfo=pytz.timezone("Europe/Berlin"))
-                entry["dtend"] = entry["dtend"].replace(tzinfo=pytz.timezone("Europe/Berlin"))
+                entry["dtstart"] = entry["dtstart"].replace(tzinfo=self.tz)
+                entry["dtend"] = entry["dtend"].replace(tzinfo=self.tz)
 
                 # Add dtstart and dtend to event
                 event.add("dtstart", entry["dtstart"])
@@ -214,7 +221,7 @@ class KalenderScraper:
     def next_event_json(self):
         now = datetime.datetime.now()
         # Add timezone information: Europe/Berlin
-        now = now.replace(tzinfo=pytz.timezone("Europe/Berlin"))
+        now = now.replace(tzinfo=self.tz)
         DayL = [
             "Montag",
             "Dienstag",
