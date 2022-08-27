@@ -3,12 +3,14 @@
 # Kalenderscraper
 # c007, 10.06.14
 # andi, 2017+2018
+# max, 2022
 
 import os
 import datetime
 import requests
 from bs4 import BeautifulSoup
 from icalendar import Calendar, Event
+import pytz
 import json
 import re
 from itertools import groupby
@@ -144,6 +146,12 @@ class KalenderScraper:
                 entry["dtend"] = entry["dtstart"] + datetime.timedelta(
                     hours=entry["duration"]
                 )
+                
+                # Add timezone information to datetimes: Europe/Berlin
+                entry["dtstart"] = entry["dtstart"].replace(tzinfo=pytz.timezone("Europe/Berlin"))
+                entry["dtend"] = entry["dtend"].replace(tzinfo=pytz.timezone("Europe/Berlin"))
+
+                # Add dtstart and dtend to event
                 event.add("dtstart", entry["dtstart"])
                 event.add("dtend", entry["dtend"])
             else:
@@ -205,6 +213,8 @@ class KalenderScraper:
 
     def next_event_json(self):
         now = datetime.datetime.now()
+        # Add timezone information: Europe/Berlin
+        now = now.replace(tzinfo=pytz.timezone("Europe/Berlin"))
         DayL = [
             "Montag",
             "Dienstag",
