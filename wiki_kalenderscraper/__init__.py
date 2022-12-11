@@ -5,19 +5,20 @@
 # andi, 2017+2018
 # max, 2022
 
+import json
 import os
+import re
 from datetime import datetime, timedelta
+from itertools import groupby
+
+import pytz
 import requests
 from bs4 import BeautifulSoup
 from icalendar import Calendar, Event
-import pytz
-import json
-import re
-from itertools import groupby
 
 
 class KalenderScraper:
-    def __init__(self, tz: str="Europe/Berlin"):
+    def __init__(self, tz: str = "Europe/Berlin"):
         """
         tz: timezone as a string (e.g. 'Europe/Berlin') via pytz
 
@@ -139,6 +140,10 @@ class KalenderScraper:
         cal_public.add("prodid", "-//wiki.muc.ccc.de Kalenderexport Public//")
         cal_public.add("version", "2.0")
 
+        # Add generation time to the calendar
+        cal.add("comment", f"last updated at {datetime.now()}")
+        cal_public.add("comment", f"last updated at {datetime.now()}")
+
         for entry in self._accumulate(self.dates):
 
             event = Event()
@@ -147,13 +152,9 @@ class KalenderScraper:
             # first classic events, taking place on one single day
             if entry["event_occurence"] == 1 and entry["duration"] < 24:
                 datestring = "{day}.{month}.{year} {time}".format(**entry)
-                entry["dtstart"] = datetime.strptime(
-                    datestring, "%d.%m.%Y %H:%M"
-                )
-                entry["dtend"] = entry["dtstart"] + timedelta(
-                    hours=entry["duration"]
-                )
-                
+                entry["dtstart"] = datetime.strptime(datestring, "%d.%m.%Y %H:%M")
+                entry["dtend"] = entry["dtstart"] + timedelta(hours=entry["duration"])
+
                 # Add timezone information to datetimes: Europe/Berlin
                 entry["dtstart"] = entry["dtstart"].replace(tzinfo=self.tz)
                 entry["dtend"] = entry["dtend"].replace(tzinfo=self.tz)
@@ -166,9 +167,7 @@ class KalenderScraper:
                 # Lightning compatible format: VALUE=DATE
                 # entry['dtstart'] = datetime.date(entry['year'], entry['month'], entry['day'])
                 datestring = "{day}.{month}.{year} {time}".format(**entry)
-                entry["dtstart"] = datetime.strptime(
-                    datestring, "%d.%m.%Y %H:%M"
-                )
+                entry["dtstart"] = datetime.strptime(datestring, "%d.%m.%Y %H:%M")
                 entry["dtend"] = entry["dtstart"] + timedelta(
                     days=int(entry["event_occurence"])
                 )
