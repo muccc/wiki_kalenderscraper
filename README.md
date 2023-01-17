@@ -1,5 +1,6 @@
-wiki_kalenderscraper
-====================
+🚨 **This code is thankfully not used anymore. Please don't use it.** 🚨
+
+# wiki_kalenderscraper
 
 Kalenderscraper fuer wiki.muc.ccc.de/kalender, Export zu .ics und .json
 
